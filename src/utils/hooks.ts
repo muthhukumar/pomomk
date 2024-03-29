@@ -6,7 +6,13 @@ function secondsBetweenDates(timestamp1: number, timestamp2: number) {
   return Math.floor(millisecondsDiff / 1000);
 }
 
-export function useTimeElapsed() {
+export function useTimeElapsed({
+  workTime = 25, // 25 minutes
+  breakTime = 5, // 5 minutes
+}: {
+  workTime?: number;
+  breakTime?: number;
+}) {
   const [timeIntervals, setTimeIntervals] = React.useState<
     Array<{ startTime: number; endTime: number; type: "work" | "rest" }>
   >([]);
@@ -14,6 +20,13 @@ export function useTimeElapsed() {
   const [status, setStatus] = React.useState<
     "idle" | "running" | "stop" | "pause"
   >("idle");
+
+  const workFinishedAudio = useMusicPlayer("/audio/work-finished.mp3");
+  const restFinishedAudio = useMusicPlayer("/audio/rest-finished.mp3");
+
+  // Converting to seconds
+  const MAX_WORK_TIME = workTime * 60;
+  const MAX_REST_TIME = breakTime * 60;
 
   const start = React.useCallback(() => {
     setStatus("running");
@@ -90,9 +103,6 @@ export function useTimeElapsed() {
 
   const intervalType = !lastInterval ? "idle" : lastInterval.type;
 
-  const MAX_WORK_TIME = 25 * 60; // 25 minutes
-  const MAX_REST_TIME = 5 * 60; // 5 minutes
-
   const lastIntervalTimeElapsed = secondsBetweenDates(
     lastInterval?.startTime || 0,
     Date.now()
@@ -109,6 +119,7 @@ export function useTimeElapsed() {
 
     if (lastInterval.type === "rest") {
       setTimeIntervals((state) => {
+        restFinishedAudio.togglePlay();
         const cloned = [...state];
 
         cloned[cloned.length - 1].endTime = Date.now();
@@ -119,6 +130,8 @@ export function useTimeElapsed() {
       });
     } else {
       setTimeIntervals((state) => {
+        workFinishedAudio.togglePlay();
+
         const cloned = [...state];
 
         cloned[cloned.length - 1].endTime = Date.now();
@@ -157,3 +170,26 @@ export function useTimeElapsed() {
     status,
   };
 }
+
+export const useMusicPlayer = (filePath: string) => {
+  const [audio] = React.useState(new Audio(filePath));
+  const [isPlaying, setIsPlaying] = React.useState(false);
+
+  React.useEffect(() => {
+    audio.volume = 0.3;
+    if (isPlaying) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, audio]);
+
+  const togglePlay = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  return {
+    togglePlay,
+    isPlaying,
+  };
+};
