@@ -28,24 +28,28 @@ export const useMusicPlayer = (filePath: string) => {
   };
 };
 
-// when clicking pause it is crashing
-//
 export type Session = {
   startTime: number;
   endTime: number;
   type: "work" | "rest";
 };
 
-const MAX_REST_TIME = 1 * 30;
-const MAX_WORK_TIME = 1 * 60;
-
-export const usePomodoroTimer = () => {
+export const usePomodoroTimer = ({
+  workInterval = 25,
+  breakInterval = 5,
+}: {
+  workInterval?: number;
+  breakInterval?: number;
+}) => {
   const [running, setRunning] = React.useState(false);
   const [rerenderCount, setRerenderCount] = React.useState(0);
   const [sessions, setSessions] = React.useState<Array<Session>>([]);
 
   const workFinishedAudio = useMusicPlayer("/audio/work.wav");
   const restFinishedAudio = useMusicPlayer("/audio/rest-finished.mp3");
+
+  const MAX_REST_TIME = breakInterval * 60;
+  const MAX_WORK_TIME = workInterval * 60;
 
   function start() {
     setRunning(true);
@@ -122,6 +126,12 @@ export const usePomodoroTimer = () => {
     });
   }
 
+  function stop() {
+    setSessions([]);
+
+    setRunning(false);
+  }
+
   React.useEffect(() => {
     let intervalId: number | undefined;
 
@@ -157,19 +167,35 @@ export const usePomodoroTimer = () => {
     }
   }, [itsTime, lastFullSession]);
 
+  const sessionType = lastFullSession.lastSessionType;
+
   return {
-    start,
-    resume,
-    pause,
+    status: {
+      isRunning: running,
+      isPaused: !running && sessions.length > 0,
+      isWorking: running && lastFullSession.lastSessionType === "work",
+      isResting: running && lastFullSession.lastSessionType === "rest",
+      isStarted: sessions.length > 0,
+    },
+    running,
+    action: {
+      start,
+      resume,
+      pause,
+      startWork,
+      takeBreak,
+      stop,
+    },
     rerenderCount,
     sessions,
     seconds,
-    startWork,
-    takeBreak,
-    sessionType: lastFullSession.lastSessionType,
+    sessionType,
     clock: forwardClock(seconds),
-    reverseClock: reverseClock(seconds, 1 * 30), // 25 minutes
-  };
+    reverseClock: reverseClock(
+      seconds,
+      sessionType === "work" ? MAX_WORK_TIME : MAX_REST_TIME
+    ),
+  } as const;
 };
 
 export function secondsElapsedOnSessions(sessions: Array<Session>) {
