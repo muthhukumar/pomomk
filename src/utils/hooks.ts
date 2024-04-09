@@ -1,174 +1,8 @@
 import * as React from "react";
-import { addLeadingZero } from ".";
 
 function secondsBetweenDates(timestamp1: number, timestamp2: number) {
   const millisecondsDiff = Math.abs(timestamp1 - timestamp2);
   return Math.floor(millisecondsDiff / 1000);
-}
-
-export function useTimeElapsed({
-  workTime = 25, // 25 minutes
-  breakTime = 5, // 5 minutes
-}: {
-  workTime?: number;
-  breakTime?: number;
-}) {
-  const [timeIntervals, setTimeIntervals] = React.useState<
-    Array<{ startTime: number; endTime: number; type: "work" | "rest" }>
-  >([]);
-  const [rerenderCount, setRerenderCount] = React.useState(0);
-  const [status, setStatus] = React.useState<
-    "idle" | "running" | "stop" | "pause"
-  >("idle");
-
-  const workFinishedAudio = useMusicPlayer("/audio/work-finished.mp3");
-  const restFinishedAudio = useMusicPlayer("/audio/rest-finished.mp3");
-
-  // Converting to seconds
-  const MAX_WORK_TIME = workTime * 60;
-  const MAX_REST_TIME = breakTime * 60;
-
-  const start = React.useCallback(() => {
-    setStatus("running");
-    setTimeIntervals((prev) => [
-      ...prev,
-      { startTime: Date.now(), endTime: 0, type: "work" },
-    ]);
-  }, []);
-
-  const stop = React.useCallback(() => {
-    setStatus("idle");
-    setTimeIntervals([]);
-  }, []);
-
-  const pause = () => {
-    if (status !== "running") return;
-
-    setStatus("pause");
-    setTimeIntervals((state) => {
-      const cloned = [...state];
-      cloned[state.length - 1].endTime = Date.now();
-
-      return cloned;
-    });
-  };
-
-  const takeABreak = () => {
-    setTimeIntervals((state) => {
-      const cloned = [...state];
-
-      cloned.push({ startTime: Date.now(), endTime: 0, type: "rest" });
-
-      return cloned;
-    });
-  };
-
-  const resume = React.useCallback(() => {
-    setStatus("running");
-
-    setTimeIntervals((prev) => {
-      const intervalType = prev[prev.length - 1]?.type || "work";
-
-      if (intervalType === "rest") {
-        return prev;
-      }
-
-      return [
-        ...prev,
-        { startTime: Date.now(), endTime: 0, type: intervalType },
-      ];
-    });
-  }, [timeIntervals]);
-
-  React.useEffect(() => {
-    let intervalId: number | undefined;
-
-    if (status === "running") {
-      intervalId = setInterval(() => {
-        setRerenderCount((count) => count + 1);
-      }, 1000);
-    }
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [status]);
-
-  const totalSecondsElapsed = timeIntervals.reduce((total, interval) => {
-    const endTime = interval.endTime || Date.now();
-    return total + secondsBetweenDates(interval.startTime, endTime);
-  }, 0);
-
-  const lastInterval = timeIntervals[timeIntervals.length - 1];
-
-  const intervalType = !lastInterval ? "idle" : lastInterval.type;
-
-  const lastIntervalTimeElapsed = secondsBetweenDates(
-    lastInterval?.startTime || 0,
-    Date.now()
-  );
-
-  const itsTime = !lastInterval
-    ? false
-    : lastInterval?.type === "work"
-    ? lastIntervalTimeElapsed >= MAX_WORK_TIME
-    : lastIntervalTimeElapsed >= MAX_REST_TIME;
-
-  React.useEffect(() => {
-    if (!lastInterval || !itsTime) return;
-
-    if (lastInterval.type === "rest") {
-      setTimeIntervals((state) => {
-        restFinishedAudio.togglePlay();
-        const cloned = [...state];
-
-        cloned[cloned.length - 1].endTime = Date.now();
-
-        cloned.push({ startTime: Date.now(), endTime: 0, type: "work" });
-
-        return cloned;
-      });
-    } else {
-      setTimeIntervals((state) => {
-        workFinishedAudio.togglePlay();
-
-        const cloned = [...state];
-
-        cloned[cloned.length - 1].endTime = Date.now();
-
-        cloned.push({ startTime: Date.now(), endTime: 0, type: "rest" });
-
-        return cloned;
-      });
-    }
-  }, [itsTime, lastInterval]);
-
-  return {
-    timeIntervals,
-    intervalType,
-    start,
-    stop,
-    pause,
-    takeABreak,
-    resume,
-    clock: {
-      seconds: addLeadingZero(totalSecondsElapsed % 60),
-      minutes: addLeadingZero(Math.floor(totalSecondsElapsed / 60)),
-    },
-    restClock:
-      lastInterval?.type === "rest"
-        ? {
-            seconds: addLeadingZero(
-              (MAX_REST_TIME - lastIntervalTimeElapsed) % 60
-            ),
-            minutes: addLeadingZero(
-              Math.floor((MAX_REST_TIME - lastIntervalTimeElapsed) / 60)
-            ),
-          }
-        : { seconds: 0, minutes: 0 },
-    rerenderCount,
-    status,
-  };
 }
 
 export const useMusicPlayer = (filePath: string) => {
@@ -193,3 +27,206 @@ export const useMusicPlayer = (filePath: string) => {
     isPlaying,
   };
 };
+
+// when clicking pause it is crashing
+//
+export type Session = {
+  startTime: number;
+  endTime: number;
+  type: "work" | "rest";
+};
+
+const MAX_REST_TIME = 1 * 30;
+const MAX_WORK_TIME = 1 * 60;
+
+export const usePomodoroTimer = () => {
+  const [running, setRunning] = React.useState(false);
+  const [rerenderCount, setRerenderCount] = React.useState(0);
+  const [sessions, setSessions] = React.useState<Array<Session>>([]);
+
+  const workFinishedAudio = useMusicPlayer("/audio/work.wav");
+  const restFinishedAudio = useMusicPlayer("/audio/rest-finished.mp3");
+
+  function start() {
+    setRunning(true);
+    setSessions((state) => {
+      const session = [...state];
+
+      session.push({ startTime: Date.now(), endTime: 0, type: "work" });
+
+      return session;
+    });
+  }
+
+  function pause() {
+    setRunning(false);
+
+    setSessions((state) => {
+      const session = [...state];
+
+      const lastSession = session[session.length - 1];
+
+      lastSession.endTime = Date.now();
+
+      return session;
+    });
+  }
+
+  function resume() {
+    setRunning(true);
+
+    setSessions((state) => {
+      const session = [...state];
+
+      const lastSession = session[session.length - 1];
+
+      session.push({
+        startTime: Date.now(),
+        endTime: 0,
+        type: lastSession.type,
+      });
+
+      return session;
+    });
+  }
+
+  function takeBreak() {
+    setSessions((state) => {
+      const session = [...state];
+
+      session[session.length - 1].endTime = Date.now();
+
+      session.push({
+        startTime: Date.now(),
+        endTime: 0,
+        type: "rest",
+      });
+
+      return session;
+    });
+  }
+
+  function startWork() {
+    setSessions((state) => {
+      const session = [...state];
+
+      session[session.length - 1].endTime = Date.now();
+
+      session.push({
+        startTime: Date.now(),
+        endTime: 0,
+        type: "work",
+      });
+
+      return session;
+    });
+  }
+
+  React.useEffect(() => {
+    let intervalId: number | undefined;
+
+    if (running) {
+      intervalId = setInterval(() => {
+        setRerenderCount((count) => count + 1);
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [running]);
+
+  const lastFullSession = getLastSessionType(sessions);
+
+  const seconds = secondsElapsedOnSessions(lastFullSession.sessions);
+
+  const itsTime =
+    lastFullSession.lastSessionType === "work"
+      ? seconds >= MAX_WORK_TIME
+      : seconds >= MAX_REST_TIME;
+
+  React.useEffect(() => {
+    if (!itsTime) return;
+
+    if (lastFullSession.lastSessionType === "work") {
+      restFinishedAudio.togglePlay();
+      takeBreak();
+    } else if (lastFullSession.lastSessionType === "rest") {
+      workFinishedAudio.togglePlay();
+      startWork();
+    }
+  }, [itsTime, lastFullSession]);
+
+  return {
+    start,
+    resume,
+    pause,
+    rerenderCount,
+    sessions,
+    seconds,
+    startWork,
+    takeBreak,
+    sessionType: lastFullSession.lastSessionType,
+    clock: forwardClock(seconds),
+    reverseClock: reverseClock(seconds, 1 * 30), // 25 minutes
+  };
+};
+
+export function secondsElapsedOnSessions(sessions: Array<Session>) {
+  return sessions.reduce((total, session) => {
+    const endTime = session.endTime || Date.now();
+    const result = secondsBetweenDates(session.startTime, endTime);
+    return total + result;
+  }, 0);
+}
+
+function getLastSessionType(_sessions: Array<Session>) {
+  const sessions = [..._sessions];
+
+  const lastSessionType = sessions[sessions.length - 1]?.type || "work";
+
+  const result: Array<Session> = [];
+
+  for (const session of sessions.reverse()) {
+    if (session.type !== lastSessionType) {
+      break;
+    }
+
+    result.push(session);
+  }
+
+  return {
+    sessions: result.reverse(),
+    lastSessionType: lastSessionType,
+  };
+}
+
+export function forwardClock(seconds: number) {
+  return {
+    seconds: Math.floor(seconds % 60),
+    minutes: Math.floor(seconds / 60),
+  };
+}
+
+export function reverseClock(seconds: number, totalTime: number) {
+  return {
+    minutes: Math.floor((totalTime - seconds) / 60),
+    seconds: Math.floor((totalTime - seconds) % 60),
+  };
+}
+
+export function separateWorkAndRestSession(sessions: Array<Session>) {
+  const result: {
+    work: Array<Session>;
+    rest: Array<Session>;
+  } = {
+    work: [],
+    rest: [],
+  };
+
+  for (const session of sessions) {
+    result[session.type].push(session);
+  }
+
+  return result;
+}
