@@ -64,8 +64,7 @@ export const usePomodoroTimer = ({
 }) => {
   const [running, setRunning] = React.useState(false);
   const [rerenderCount, setRerenderCount] = React.useState(0);
-  // move this state to ref
-  const [sessions, setSessions] = React.useState<Array<Session>>([]);
+  const sessions = React.useRef<Array<Session>>([]);
 
   const workFinishedAudio = useMusicPlayer("/audio/work.wav");
   const restFinishedAudio = useMusicPlayer("/audio/rest-finished.mp3");
@@ -75,85 +74,56 @@ export const usePomodoroTimer = ({
 
   function start() {
     setRunning(true);
-    setSessions((state) => {
-      const session = [...state];
 
-      const newSession = new Session("work");
-      newSession.setStartTime(Date.now());
-      newSession.setEndTime(0);
+    const newSession = new Session("work");
+    newSession.setStartTime(Date.now());
+    newSession.setEndTime(0);
 
-      session.push(newSession);
-
-      return session;
-    });
+    sessions.current.push(newSession);
   }
 
   function pause() {
     setRunning(false);
 
-    setSessions((state) => {
-      const session = [...state];
+    const lastSession = sessions.current[sessions.current.length - 1];
 
-      const lastSession = session[session.length - 1];
-
-      lastSession.setEndTime(Date.now());
-
-      return session;
-    });
+    if (lastSession) lastSession.setEndTime(Date.now());
   }
 
   function resume() {
     setRunning(true);
 
-    setSessions((state) => {
-      const session = [...state];
+    const lastSession = sessions.current[sessions.current.length - 1];
 
-      const lastSession = session[session.length - 1];
+    const newSession = new Session(lastSession.type);
+    newSession.setStartTime(Date.now());
+    newSession.setEndTime(0);
 
-      const newSession = new Session(lastSession.type);
-      newSession.setStartTime(Date.now());
-      newSession.setEndTime(0);
-
-      session.push(newSession);
-
-      return session;
-    });
+    sessions.current.push(newSession);
   }
 
   function takeBreak() {
-    setSessions((state) => {
-      const session = [...state];
+    sessions.current[sessions.current.length - 1].endTime = Date.now();
 
-      session[session.length - 1].endTime = Date.now();
+    const newSession = new Session("rest");
+    newSession.setStartTime(Date.now());
+    newSession.setEndTime(0);
 
-      const newSession = new Session("rest");
-      newSession.setStartTime(Date.now());
-      newSession.setEndTime(0);
-
-      session.push(newSession);
-
-      return session;
-    });
+    sessions.current.push(newSession);
   }
 
   function startWork() {
-    setSessions((state) => {
-      const session = [...state];
+    sessions.current[sessions.current.length - 1].endTime = Date.now();
 
-      session[session.length - 1].endTime = Date.now();
+    const newSession = new Session("work");
+    newSession.setStartTime(Date.now());
+    newSession.setEndTime(0);
 
-      const newSession = new Session("work");
-      newSession.setStartTime(Date.now());
-      newSession.setEndTime(0);
-
-      session.push(newSession);
-
-      return session;
-    });
+    sessions.current.push(newSession);
   }
 
   function stop() {
-    setSessions([]);
+    sessions.current = [];
 
     setRunning(false);
   }
@@ -172,7 +142,7 @@ export const usePomodoroTimer = ({
     };
   }, [running]);
 
-  const lastFullSession = getLastSessionType(sessions);
+  const lastFullSession = getLastSessionType(sessions.current);
 
   const seconds = secondsElapsedOnSessions(lastFullSession.sessions);
 
@@ -198,10 +168,10 @@ export const usePomodoroTimer = ({
   return {
     status: {
       isRunning: running,
-      isPaused: !running && sessions.length > 0,
+      isPaused: !running && sessions.current.length > 0,
       isWorking: running && lastFullSession.lastSessionType === "work",
       isResting: running && lastFullSession.lastSessionType === "rest",
-      isStarted: sessions.length > 0,
+      isStarted: sessions.current.length > 0,
     },
     running,
     action: {
