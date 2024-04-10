@@ -28,11 +28,32 @@ export const useMusicPlayer = (filePath: string) => {
   };
 };
 
-export type Session = {
-  startTime: number;
-  endTime: number;
-  type: "work" | "rest";
-};
+export class Session {
+  _timeSpent: number = 0;
+  startTime: number = 0;
+  endTime: number = 0;
+  constructor(public type: "work" | "rest") {}
+
+  setStartTime(value: number) {
+    this.startTime = value;
+
+    this.computeTimeSpent();
+  }
+
+  setEndTime(value: number) {
+    this.endTime = value;
+
+    this.computeTimeSpent();
+  }
+
+  computeTimeSpent() {
+    this._timeSpent = secondsBetweenDates(this.startTime, this.endTime);
+  }
+
+  get timeSpent(): number {
+    return this._timeSpent;
+  }
+}
 
 export const usePomodoroTimer = ({
   workInterval = 25,
@@ -43,6 +64,7 @@ export const usePomodoroTimer = ({
 }) => {
   const [running, setRunning] = React.useState(false);
   const [rerenderCount, setRerenderCount] = React.useState(0);
+  // move this state to ref
   const [sessions, setSessions] = React.useState<Array<Session>>([]);
 
   const workFinishedAudio = useMusicPlayer("/audio/work.wav");
@@ -56,7 +78,11 @@ export const usePomodoroTimer = ({
     setSessions((state) => {
       const session = [...state];
 
-      session.push({ startTime: Date.now(), endTime: 0, type: "work" });
+      const newSession = new Session("work");
+      newSession.setStartTime(Date.now());
+      newSession.setEndTime(0);
+
+      session.push(newSession);
 
       return session;
     });
@@ -70,7 +96,7 @@ export const usePomodoroTimer = ({
 
       const lastSession = session[session.length - 1];
 
-      lastSession.endTime = Date.now();
+      lastSession.setEndTime(Date.now());
 
       return session;
     });
@@ -84,11 +110,11 @@ export const usePomodoroTimer = ({
 
       const lastSession = session[session.length - 1];
 
-      session.push({
-        startTime: Date.now(),
-        endTime: 0,
-        type: lastSession.type,
-      });
+      const newSession = new Session(lastSession.type);
+      newSession.setStartTime(Date.now());
+      newSession.setEndTime(0);
+
+      session.push(newSession);
 
       return session;
     });
@@ -100,11 +126,11 @@ export const usePomodoroTimer = ({
 
       session[session.length - 1].endTime = Date.now();
 
-      session.push({
-        startTime: Date.now(),
-        endTime: 0,
-        type: "rest",
-      });
+      const newSession = new Session("rest");
+      newSession.setStartTime(Date.now());
+      newSession.setEndTime(0);
+
+      session.push(newSession);
 
       return session;
     });
@@ -116,11 +142,11 @@ export const usePomodoroTimer = ({
 
       session[session.length - 1].endTime = Date.now();
 
-      session.push({
-        startTime: Date.now(),
-        endTime: 0,
-        type: "work",
-      });
+      const newSession = new Session("work");
+      newSession.setStartTime(Date.now());
+      newSession.setEndTime(0);
+
+      session.push(newSession);
 
       return session;
     });
@@ -200,9 +226,11 @@ export const usePomodoroTimer = ({
 
 export function secondsElapsedOnSessions(sessions: Array<Session>) {
   return sessions.reduce((total, session) => {
-    const endTime = session.endTime || Date.now();
-    const result = secondsBetweenDates(session.startTime, endTime);
-    return total + result;
+    if (session.endTime === 0) {
+      return total + secondsBetweenDates(session.startTime, Date.now());
+    }
+
+    return total + session.timeSpent;
   }, 0);
 }
 
