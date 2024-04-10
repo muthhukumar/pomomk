@@ -1,9 +1,4 @@
-import {
-  forwardClock,
-  Session,
-  secondsElapsedOnSessions,
-  separateWorkAndRestSession,
-} from "../utils/hooks";
+import { forwardClock, secondsElapsedOnSessions, separateWorkAndRestSession, Session } from "../utils/pomodoro";
 
 export default function Sessions({ sessions }: { sessions: Array<Session> }) {
   const { work, rest } = separateWorkAndRestSession(sessions);

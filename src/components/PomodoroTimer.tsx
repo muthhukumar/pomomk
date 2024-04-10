@@ -1,4 +1,4 @@
-import { usePomodoroTimer } from "../utils/hooks";
+import { usePomodoroTimer } from "../utils/pomodoro/hooks";
 
 import Button from "./Button";
 import Clock from "./Clock";
