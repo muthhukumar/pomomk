@@ -27,35 +27,45 @@ const links = [
   },
 ];
 
+function LinkWrapper({
+  isActive,
+  children,
+}: {
+  children: React.ReactNode;
+  isActive: boolean;
+}) {
+  return (
+    <div
+      className={clsx("p-3 m-2 border rounded-md", {
+        "border-smoke bg-matt-black": isActive,
+        "border-black rounded-md": !isActive,
+      })}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function Sidebar() {
   const pathname = useLocation().pathname;
 
   return (
-    <header className="h-screen bg-gray-800">
+    <header className="h-screen bg-black">
       <nav className="flex flex-col justify-between items-center mt-16">
         <div className="flex flex-col">
           {links.map(({ id, href, size, Icon }) => (
-            <div
-              key={id}
-              className={clsx("p-4", {
-                "bg-gray-700": pathname === href,
-              })}
-            >
+            <LinkWrapper key={id} isActive={pathname === href}>
               <Link to={href}>
                 <Icon size={size} />
               </Link>
-            </div>
+            </LinkWrapper>
           ))}
 
-          <div
-            className={clsx("p-4", {
-              "bg-gray-700": pathname === "/settings",
-            })}
-          >
+          <LinkWrapper isActive={pathname === "/settings"}>
             <Link to="/settings">
               <IoSettingsOutline size={20} />
             </Link>
-          </div>
+          </LinkWrapper>
         </div>
       </nav>
     </header>

@@ -1,6 +1,13 @@
 import * as React from "react";
 import { useSessions } from "./provider";
-import { forwardClock, getLastSessionType, reverseClock, secondsElapsedOnSessions, Session } from ".";
+import {
+  forwardClock,
+  getLastSessionType,
+  reverseClock,
+  secondsElapsedOnSessions,
+  Session,
+} from ".";
+import { useTick } from "../hooks/tick";
 
 export const useMusicPlayer = (filePath: string) => {
   const [audio] = React.useState(new Audio(filePath));
@@ -25,7 +32,6 @@ export const useMusicPlayer = (filePath: string) => {
   };
 };
 
-
 export const usePomodoroTimer = ({
   workInterval = 25,
   breakInterval = 5,
@@ -33,8 +39,8 @@ export const usePomodoroTimer = ({
   workInterval?: number;
   breakInterval?: number;
 }) => {
-  const [running, setRunning] = React.useState(false);
-  const [rerenderCount, setRerenderCount] = React.useState(0);
+  const { running, tick, halt } = useTick();
+
   const sessions = useSessions();
 
   const workFinishedAudio = useMusicPlayer("/audio/work.wav");
@@ -44,7 +50,7 @@ export const usePomodoroTimer = ({
   const MAX_WORK_TIME = workInterval * 60;
 
   function start() {
-    setRunning(true);
+    tick();
 
     const newSession = new Session("work");
     newSession.setStartTime(Date.now());
@@ -54,7 +60,7 @@ export const usePomodoroTimer = ({
   }
 
   function pause() {
-    setRunning(false);
+    halt();
 
     const lastSession = sessions.current[sessions.current.length - 1];
 
@@ -62,7 +68,7 @@ export const usePomodoroTimer = ({
   }
 
   function resume() {
-    setRunning(true);
+    tick();
 
     const lastSession = sessions.current[sessions.current.length - 1];
 
@@ -96,22 +102,8 @@ export const usePomodoroTimer = ({
   function stop() {
     sessions.current = [];
 
-    setRunning(false);
+    halt();
   }
-
-  React.useEffect(() => {
-    let intervalId: number | undefined;
-
-    if (running) {
-      intervalId = setInterval(() => {
-        setRerenderCount((count) => count + 1);
-      }, 1000);
-    }
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [running]);
 
   const lastFullSession = getLastSessionType(sessions.current);
 
@@ -153,7 +145,6 @@ export const usePomodoroTimer = ({
       takeBreak,
       stop,
     },
-    rerenderCount,
     sessions,
     seconds,
     sessionType,
@@ -164,4 +155,3 @@ export const usePomodoroTimer = ({
     ),
   } as const;
 };
-

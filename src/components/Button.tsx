@@ -7,7 +7,7 @@ export default function Button({ className, ...props }: ButtonProps) {
   return (
     <button
       className={twMerge(
-        "border px-5 py-2 rounded-md bg-black text-white",
+        "px-6 py-2 rounded-md bg-matt-black border border-smoke text-white",
         className
       )}
       {...props}

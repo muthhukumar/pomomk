@@ -1,7 +1,12 @@
+import { SlControlPause } from "react-icons/sl";
+import { FaStop } from "react-icons/fa6";
+import { FaPlay } from "react-icons/fa6";
+
 import { usePomodoroTimer } from "../utils/pomodoro/hooks";
 
 import Button from "./Button";
 import Clock from "./Clock";
+import IconButton from "./IconButton";
 
 export default function App() {
   const {
@@ -13,19 +18,29 @@ export default function App() {
 
   return (
     <div className="w-full justify-center h-screen flex items-center flex-col">
-      <p className="border rounded-full px-5 py-1 mb-8">
+      <p className="border border-smoke text-white rounded-full px-5 py-1 mb-8">
         {sessionType === "work" ? "Work" : "Short Break"}
       </p>
       <Clock sec={reverseClock.seconds} min={reverseClock.minutes} />
-      <div className="mt-5 flex items-center gap-3">
+      <div className="mt-16 flex items-center gap-3">
         {!status.isRunning && !status.isPaused && (
           <Button onClick={start}>Start</Button>
         )}
-        {status.isRunning && <Button onClick={pause}>Pause</Button>}
-        {status.isPaused && <Button onClick={resume}>Resume</Button>}
-        {status.isWorking && <Button onClick={takeBreak}>Take a Break</Button>}
-        {status.isResting && <Button onClick={startWork}>Start Work</Button>}
-        {status.isStarted && <Button onClick={stop}>Stop</Button>}
+        {status.isRunning && (
+          <IconButton onClick={pause} icon={SlControlPause} />
+        )}
+        {status.isPaused && <IconButton onClick={resume} icon={FaPlay} />}
+        {status.isWorking && (
+          <Button onClick={takeBreak} className="mx-3">
+            Take a Break
+          </Button>
+        )}
+        {status.isResting && (
+          <Button onClick={startWork} className="mx-3">
+            Start Work
+          </Button>
+        )}
+        {status.isStarted && <IconButton onClick={stop} icon={FaStop} />}
       </div>
     </div>
   );

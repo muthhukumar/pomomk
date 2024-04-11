@@ -13,7 +13,7 @@ export default function Clock({
     <>
       <div className="grid grid-flow-col gap-5 text-center auto-cols-max">
         {Boolean(days) && (
-          <div className="flex flex-col p-2 bg-neutral rounded-box text-neutral-content">
+          <div className="flex flex-col p-2 rounded-box text-neutral-content bg-matt-black border-smoke border">
             <span className="countdown font-mono text-5xl">
               {/* @ts-ignore */}
               <span style={{ "--value": days ?? 0 }}></span>
@@ -22,7 +22,7 @@ export default function Clock({
           </div>
         )}
         {Boolean(hours) && (
-          <div className="flex flex-col p-2 bg-neutral rounded-box text-neutral-content">
+          <div className="flex flex-col p-2 rounded-box text-neutral-content bg-matt-black border-smoke border">
             <span className="countdown font-mono text-5xl">
               {/* @ts-ignore */}
               <span style={{ "--value": hours ?? 0 }}></span>
@@ -30,16 +30,16 @@ export default function Clock({
             hours
           </div>
         )}
-        <div className="flex flex-col p-2 bg-neutral rounded-box text-neutral-content">
+        <div className="flex flex-col p-2 rounded-box text-neutral-content bg-matt-black border-smoke border">
           <span className="countdown font-mono text-5xl">
-              {/* @ts-ignore */}
+            {/* @ts-ignore */}
             <span style={{ "--value": min }}></span>
           </span>
           min
         </div>
-        <div className="flex flex-col p-2 bg-neutral rounded-box text-neutral-content">
+        <div className="flex flex-col p-2 bg-matt-black border-smoke border rounded-box text-neutral-content">
           <span className="countdown font-mono text-5xl">
-              {/* @ts-ignore */}
+            {/* @ts-ignore */}
             <span style={{ "--value": sec }}></span>
           </span>
           sec

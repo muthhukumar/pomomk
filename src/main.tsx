@@ -15,6 +15,5 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <SessionsProvider>
       <RouterProvider router={router} />
     </SessionsProvider>
-    )
   </React.StrictMode>
 );
