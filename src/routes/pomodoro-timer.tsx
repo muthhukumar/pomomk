@@ -1,5 +1,10 @@
-import { PomodoroTimer } from "../components";
+import { PomodoroTimer, AllTasks } from "../components";
 
 export default function PomodoroTimerPage() {
-  return <PomodoroTimer />;
+  return (
+    <>
+      <PomodoroTimer />
+      <AllTasks />
+    </>
+  );
 }

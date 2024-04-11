@@ -54,11 +54,11 @@ export default function Sidebar() {
       <nav className="flex flex-col justify-between items-center mt-16">
         <div className="flex flex-col">
           {links.map(({ id, href, size, Icon }) => (
-            <LinkWrapper key={id} isActive={pathname === href}>
-              <Link to={href}>
+            <Link to={href} key={id}>
+              <LinkWrapper isActive={pathname === href}>
                 <Icon size={size} />
-              </Link>
-            </LinkWrapper>
+              </LinkWrapper>
+            </Link>
           ))}
 
           <LinkWrapper isActive={pathname === "/settings"}>

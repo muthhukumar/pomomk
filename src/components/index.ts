@@ -5,3 +5,4 @@ export { default as Sidebar } from "./Sidebar";
 export { default as PomodoroTimer } from "./PomodoroTimer";
 export { default as Sessions } from "./Sessions";
 export { default as RadioInput } from "./RadioInput";
+export { default as AllTasks } from "./Tasks";

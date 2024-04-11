@@ -9,11 +9,14 @@ import "./index.css";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router";
 import { SessionsProvider } from "./utils/pomodoro/provider";
+import { TasksProvider } from "./utils/hooks/tasks";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <SessionsProvider>
-      <RouterProvider router={router} />
+      <TasksProvider>
+        <RouterProvider router={router} />
+      </TasksProvider>
     </SessionsProvider>
   </React.StrictMode>
 );
