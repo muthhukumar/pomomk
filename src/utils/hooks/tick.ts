@@ -24,6 +24,9 @@ export function useTick() {
 
   function halt() {
     setRunning(false);
+
+    // After we're stopping if we reset the sessions it is not rendering because we're using the ref. So by updating the ref it is not rerendering. So we just need to do this.
+    setRerenderCount((c) => c + 1);
   }
 
   return { running, tick, halt, rerenderCount };
