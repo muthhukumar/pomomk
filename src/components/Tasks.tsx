@@ -67,11 +67,7 @@ function TaskInput({ isActiveSession = false }: { isActiveSession?: boolean }) {
     <form
       className="group rounded-md p-3 w-full bg-matt-black border border-smoke flex items-center"
       onSubmit={(e) => {
-        console.log("it is not ocming here");
-
         e.preventDefault();
-
-        console.log("it is not ocming here");
 
         if (!task) {
           return;
@@ -125,7 +121,7 @@ function Task({ completed, duration, title, id }: TaskType) {
       <input
         value={title}
         className="outline-none w-full mx-2 text-white bg-matt-black focus:outline-none"
-        placeholder="What do you want to do next?"
+        placeholder=""
         onChange={(e) => setTitle({ taskId: id, title: e.target.value })}
       />
 
