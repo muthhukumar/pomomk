@@ -564,6 +564,13 @@
     "@tauri-apps/cli-win32-ia32-msvc" "2.0.0-beta.12"
     "@tauri-apps/cli-win32-x64-msvc" "2.0.0-beta.12"
 
+"@tauri-apps/plugin-notification@^2.0.0-beta.2":
+  version "2.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/plugin-notification/-/plugin-notification-2.0.0-beta.2.tgz#ba9ce265a334acca550fc26071434e7f06ff7b31"
+  integrity sha512-OxMuKawWkXGR04hALFrPhRXhA3vGRyMy+kRT3vdHoAwngZHcBGetRqm6CuW0tSNWCgwuUYXpN57636CfUReg5g==
+  dependencies:
+    "@tauri-apps/api" "2.0.0-beta.4"
+
 "@tauri-apps/plugin-shell@>=2.0.0-beta.0":
   version "2.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/@tauri-apps/plugin-shell/-/plugin-shell-2.0.0-beta.2.tgz#1eff697246140f17478527b0d947d76d3403a226"
